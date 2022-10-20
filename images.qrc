@@ -1,0 +1,5 @@
+<RCC> 
+    <qresource prefix="/"> 
+        <file>Ifc.ico</file>
+     </qresource> 
+</RCC>

@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtWidgets import QFileDialog, QProgressDialog, QAction
-from PyQt5.QtWinExtras import QWinTaskbarButton
+from PyQt5.QtWinExtras import QWinTaskbarButton, QWinTaskbarProgress
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 import sys
@@ -42,8 +42,10 @@ class MainWindow(QtWidgets.QMainWindow):
         action.setMenuRole(QtWidgets.QAction.NoRole)
         action.triggered.connect(self.parseIfc)
         self.menuOpen.addAction(action)
-        self.windowsTaskbarButton = QWinTaskbarButton(self)
-        self.windowsTaskbarButton.setWindow(self.windowHandle())
+        self.taskbar_button = QWinTaskbarButton(self)
+        self.taskbar_button.setWindow(self.windowHandle())
+        self._progress = self.taskbar_button.progress()
+            
 
     def parseIfc(self) -> None:
         file_path, _ = QFileDialog.getOpenFileName(
@@ -58,9 +60,8 @@ class MainWindow(QtWidgets.QMainWindow):
             progress = QProgressDialog(minimum=0, maximum=n, parent=self)
             progress.setWindowFlags(
                 Qt.Dialog | Qt.CustomizeWindowHint | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
-            windowsTaskbarProgress = self.windowsTaskbarButton.progress()
-            windowsTaskbarProgress.setVisible(True)
-            windowsTaskbarProgress.setRange(0,n)
+            self._progress.setVisible(True)
+            self._progress.setRange(0,n)
             progress.setWindowTitle("正在解析...")
             progress.setCancelButton(None)
             progress.setWindowModality(Qt.ApplicationModal)
@@ -68,7 +69,8 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 for i, product in enumerate(products):
                     progress.setValue(i + 1)
-                    windowsTaskbarProgress.setValue(i+1)
+                    self._progress.setValue(i+1)
+                    self._progress.show()
                     QCoreApplication.processEvents()
                     if progress.wasCanceled():
                         break
@@ -95,7 +97,7 @@ class MainWindow(QtWidgets.QMainWindow):
             except Exception as e:
                 print(e)
                 progress.close()
-            windowsTaskbarProgress.setValue(0)
+            self._progress.reset()
             self.canva._display.FitAll()
             self.canva._display.Repaint()
 

@@ -43,6 +43,7 @@ class MainWindow(QtWidgets.QMainWindow):
         action.triggered.connect(self.parseIfc)
         self.menuOpen.addAction(action)
         self.windowsTaskbarButton = QWinTaskbarButton(self)
+        self.windowsTaskbarButton.setWindow(self.windowHandle())
 
     def parseIfc(self) -> None:
         file_path, _ = QFileDialog.getOpenFileName(

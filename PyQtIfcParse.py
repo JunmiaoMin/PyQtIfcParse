@@ -96,6 +96,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             shape, color=rgbColor, transparency=ifcTransparency)
             except Exception as e:
                 print(e)
+            finally:
                 progress.close()
             self._progress.reset()
             self.canva._display.FitAll()

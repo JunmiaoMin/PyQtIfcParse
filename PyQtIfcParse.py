@@ -71,6 +71,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     progress.setValue(i + 1)
                     self._progress.setValue(i+1)
                     self._progress.show()
+                    if product.is_a("IfcOpeningElement") or product.is_a("IfcSpace"):
+                        continue
                     QCoreApplication.processEvents()
                     if progress.wasCanceled():
                         break

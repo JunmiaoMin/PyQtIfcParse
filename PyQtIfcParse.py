@@ -1,7 +1,6 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtWidgets import QFileDialog, QProgressDialog, QAction
-from PyQt5.QtWinExtras import QWinTaskbarButton, QWinTaskbarProgress
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 import sys
@@ -42,9 +41,6 @@ class MainWindow(QtWidgets.QMainWindow):
         action.setMenuRole(QtWidgets.QAction.NoRole)
         action.triggered.connect(self.parseIfc)
         self.menuOpen.addAction(action)
-        self.taskbar_button = QWinTaskbarButton(self)
-        self.taskbar_button.setWindow(self.windowHandle())
-        self._progress = self.taskbar_button.progress()
             
 
     def parseIfc(self) -> None:
@@ -52,6 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self, "打开IFC文件", os.path.join(os.path.expanduser("~"), 'Desktop'),
             "工业基础类(*.ifc)")
         if os.path.exists(file_path):
+            self.canva._display.EraseAll()
             settings = geom.settings()
             settings.set(settings.USE_PYTHON_OPENCASCADE, True)
             ifc_file = ifcopenshell.open(file_path)
@@ -60,8 +57,6 @@ class MainWindow(QtWidgets.QMainWindow):
             progress = QProgressDialog(minimum=0, maximum=n, parent=self)
             progress.setWindowFlags(
                 Qt.Dialog | Qt.CustomizeWindowHint | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
-            self._progress.setVisible(True)
-            self._progress.setRange(0,n)
             progress.setWindowTitle("正在解析...")
             progress.setCancelButton(None)
             progress.setWindowModality(Qt.ApplicationModal)
@@ -69,38 +64,27 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 for i, product in enumerate(products):
                     progress.setValue(i + 1)
-                    self._progress.setValue(i+1)
-                    self._progress.show()
                     if product.is_a("IfcOpeningElement") or product.is_a("IfcSpace"):
                         continue
                     QCoreApplication.processEvents()
                     if progress.wasCanceled():
                         break
                     if product.Representation is not None:
+                        # These are methods of the TopoDS_Shape class from pythonOCC
+                        shape = geom.create_shape(settings, product)
                         rgbColor = rgb_color(
                             0.5704820156097412, 0.2835550010204315, 0.01233499962836504)
-                        ifcTransparency = 0.0
-                        for representation in product.Representation.Representations:
-                            for item in representation.Items:
-                                for styleItem in item.StyledByItem:
-                                    for presentationStyle in styleItem.Styles:
-                                        for style in presentationStyle.Styles:
-                                            if style.is_a("IfcSurfaceStyle"):
-                                                for styleRendering in style.Styles:
-                                                    if styleRendering.is_a("IfcSurfaceStyleRendering"):
-                                                        ifcColour = styleRendering.SurfaceColour
-                                                        ifcTransparency = styleRendering.Transparency
-                                                        rgbColor = rgb_color(
-                                                            ifcColour.Red, ifcColour.Green, ifcColour.Blue)
-                        # These are methods of the TopoDS_Shape class from pythonOCC
-                        shape = geom.create_shape(settings, product).geometry
+                        transparency = 0.0
+                        for style in shape.styles:
+                            rgbColor = rgb_color(style[0], style[1], style[2])
+                            transparency = style[3]
+                            break
                         self.canva._display.DisplayShape(
-                            shape, color=rgbColor, transparency=ifcTransparency)
+                            shape.geometry, color=rgbColor, transparency=1-transparency)
             except Exception as e:
                 print(e)
             finally:
                 progress.close()
-            self._progress.reset()
             self.canva._display.FitAll()
             self.canva._display.Repaint()
 

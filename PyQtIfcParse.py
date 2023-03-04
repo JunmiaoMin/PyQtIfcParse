@@ -9,6 +9,9 @@ import ifcopenshell
 from ifcopenshell import geom
 from OCC.Display.backend import load_any_qt_backend, get_qt_modules
 from OCC.Display.OCCViewer import rgb_color
+from OCC.Extend.DataExchange import read_stl_file
+from OCC.Extend.DataExchange import read_iges_file
+from OCC.Extend.DataExchange import read_step_file
 import images
 
 load_any_qt_backend()
@@ -37,11 +40,53 @@ class MainWindow(QtWidgets.QMainWindow):
             # bold
             self.menu_bar = QtWidgets.QMenuBar()
         self.menuOpen = self.menu_bar.addMenu("打开")
-        action = QAction(QIcon(":/Ifc.ico"), "打开IFC文件", self)
-        action.setMenuRole(QtWidgets.QAction.NoRole)
-        action.triggered.connect(self.parseIfc)
-        self.menuOpen.addAction(action)
-            
+        actionIfc = QAction(QIcon(":/Ifc.ico"), "打开IFC文件", self)
+        actionIfc.setMenuRole(QtWidgets.QAction.NoRole)
+        actionIfc.triggered.connect(self.parseIfc)
+        actionStl = QAction(QIcon(":/Ifc.ico"), "打开STL文件", self)
+        actionStl.setMenuRole(QtWidgets.QAction.NoRole)
+        actionStl.triggered.connect(self.parseStl)
+        actionIges = QAction(QIcon(":/Ifc.ico"), "打开IGES文件", self)
+        actionIges.setMenuRole(QtWidgets.QAction.NoRole)
+        actionIges.triggered.connect(self.parseIges)
+        actionStep = QAction(QIcon(":/Ifc.ico"), "打开STEP文件", self)
+        actionStep.setMenuRole(QtWidgets.QAction.NoRole)
+        actionStep.triggered.connect(self.parseStep)
+        self.menuOpen.addAction(actionIfc)
+        self.menuOpen.addAction(actionStl)
+        self.menuOpen.addAction(actionIges)
+        self.menuOpen.addAction(actionStep)
+
+    def parseStep(self)->None:
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "打开STEP文件", os.path.join(os.path.expanduser("~"), 'Desktop'),
+            "STEP文件(*.step;*.stp)")
+        if os.path.exists(file_path):
+            shape = read_step_file(file_path,False)
+            self.canva._display.DisplayShape(shape)
+            self.canva._display.FitAll()
+            self.canva._display.Repaint()
+
+    def parseIges(self)->None:
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "打开IGES文件", os.path.join(os.path.expanduser("~"), 'Desktop'),
+            "IGES文件(*.iges;*.igs)")
+        if os.path.exists(file_path):
+            shapes = read_iges_file(file_path,True)
+            for shape in shapes:
+                self.canva._display.DisplayShape(shape)
+            self.canva._display.FitAll()
+            self.canva._display.Repaint()
+        
+    def parseStl(self)->None:
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "打开STL文件", os.path.join(os.path.expanduser("~"), 'Desktop'),
+            "STL文件(*.stl)")
+        if os.path.exists(file_path):
+            shape = read_stl_file(file_path)
+            self.canva._display.DisplayShape(shape)
+            self.canva._display.FitAll()
+            self.canva._display.Repaint()
 
     def parseIfc(self) -> None:
         file_path, _ = QFileDialog.getOpenFileName(

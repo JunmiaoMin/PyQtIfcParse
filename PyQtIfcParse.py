@@ -5,6 +5,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 import sys
 import os
+from collections import Iterable
 import ifcopenshell
 from ifcopenshell import geom
 from OCC.Display.backend import load_any_qt_backend, get_qt_modules
@@ -62,8 +63,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self, "打开STEP文件", os.path.join(os.path.expanduser("~"), 'Desktop'),
             "STEP文件(*.step;*.stp)")
         if os.path.exists(file_path):
-            shape = read_step_file(file_path,False)
-            self.canva._display.DisplayShape(shape)
+            shapes = read_step_file(file_path,False)
+            if isinstance(shapes,Iterable):
+                for shape in shapes:
+                    self.canva._display.DisplayShape(shape)
+            else:
+                self.canva._display.DisplayShape(shapes)
             self.canva._display.FitAll()
             self.canva._display.Repaint()
 

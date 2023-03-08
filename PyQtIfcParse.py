@@ -9,7 +9,7 @@ from collections import Iterable
 import ifcopenshell
 from ifcopenshell import geom
 from OCC.Display.backend import load_any_qt_backend, get_qt_modules
-from OCC.Display.OCCViewer import rgb_color
+from OCC.Display.OCCViewer import rgb_color, Quantity_Color
 from OCC.Extend.DataExchange import read_stl_file
 from OCC.Extend.DataExchange import read_iges_file
 from OCC.Extend.DataExchange import read_step_file
@@ -114,7 +114,7 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 for i, product in enumerate(products):
                     progress.setValue(i + 1)
-                    if product.is_a("IfcOpeningElement") or product.is_a("IfcSpace"):
+                    if product.is_a("IfcOpeningElement") or product.is_a("IfcSpace") or product.is_a("IfcGrid"):
                         continue
                     QCoreApplication.processEvents()
                     if progress.wasCanceled():
@@ -122,8 +122,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     if product.Representation is not None:
                         # These are methods of the TopoDS_Shape class from pythonOCC
                         shape = geom.create_shape(settings, product)
-                        rgbColor = rgb_color(
-                            0.5704820156097412, 0.2835550010204315, 0.01233499962836504)
+                        rgbColor = Quantity_Color()
                         transparency = 0.0
                         for style in shape.styles:
                             rgbColor = rgb_color(style[0], style[1], style[2])

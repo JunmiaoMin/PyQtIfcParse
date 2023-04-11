@@ -5,7 +5,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 import sys
 import os
-from collections import Iterable
+from collections.abc import Iterable
 import ifcopenshell
 from ifcopenshell import geom
 from OCC.Display.backend import load_any_qt_backend, get_qt_modules
